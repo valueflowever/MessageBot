@@ -47,6 +47,7 @@ def main():
     bot_token = config['CONF']['bot_token']
     group_chat_id = config['CONF']['group_chat_id']
     set_gas = config['CONF']['set_gas']
+    interval_time = int(config['CONF']['interval_time'])
 
     while 1:
         gas = gas_now()
@@ -55,7 +56,7 @@ def main():
             proxy = telegram.utils.request.Request(proxy_url='socks5://127.0.0.1:10808')
             bot = telegram.Bot(bot_token, request=proxy)
             bot.send_message(chat_id=group_chat_id, text=F"当前以太坊的gas为 {fast_gas} gwei")
-            time.sleep(30)
+            time.sleep(interval_time)
 
 
 if __name__ == '__main__':
