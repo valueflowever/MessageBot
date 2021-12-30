@@ -51,7 +51,7 @@ def get_eth_price() -> float:
         raise Exception('error')
 
 
-def get_sushipool_token_price(pair_address: str) -> dict:
+def get_pool_token_price(pair_address: str) -> dict:
     headers = {
         'Content-Type': 'application/json',
         'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0",
@@ -84,7 +84,7 @@ def send_message(config: dict, remind_type: str, threshold: float):
 
     if remind_type == 'price':
         pair_address = config['PRICE']['pair_address']
-        token_message = get_sushipool_token_price(pair_address)
+        token_message = get_pool_token_price(pair_address)
         if float(token_message['price']) >= float(threshold):
             bot.send_message(chat_id=group_chat_id,
                              text=F"当前时间: {token_message['time']}, 关注的{token_message['symbol']} 价格为{token_message['price']}")
