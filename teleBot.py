@@ -15,7 +15,7 @@ def get_config(filepath: str) -> dict:
     return items
 
 
-def ethereum_gas_now(authorization: str) -> dict:
+def get_ethereum_gas_now(authorization: str) -> dict:
     """
     数据API：https://docs.blocknative.com/gas-platform
     数据每 15s 更新一次，请勿发送请求过于频繁
@@ -33,7 +33,7 @@ def ethereum_gas_now(authorization: str) -> dict:
         return {}
 
 
-def eth_price() -> float:
+def get_eth_price() -> float:
     """
     api_doc https://www.coingecko.com/en/api/documentation
     :return: eth price
@@ -50,7 +50,7 @@ def eth_price() -> float:
         raise Exception('error')
 
 
-def get_sushipool_token_price() -> dict:
+def get_sushipool_token_price(pair_address: str) -> dict:
     headers = {
         'Content-Type': 'application/json',
         'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0",
