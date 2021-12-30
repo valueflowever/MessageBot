@@ -15,31 +15,24 @@ def get_config(filepath: str) -> dict:
     return items
 
 
-def gas_now() -> dict:
+def ethereum_gas_now(authorization: str) -> dict:
     """
-    数据API：https://taichi.network/#gasnow
+    数据API：https://docs.blocknative.com/gas-platform
     数据每 15s 更新一次，请勿发送请求过于频繁
-    :return: 当前以太坊 gas
-    e.P.
-    {
-    "code": 200,
-    "data": {
-      "rapid": 180132000000, // wei
-      "fast": 177000000000,
-      "slow": 150000000000,
-      "standard": 109000001459,
-      "timestamp": 1598434638872
-        }
-    }
     """
-    url = 'https://www.gasnow.org/api/v3/gas/price?utm_source=:imToken'
+    url = 'https://api.blocknative.com/gasprices/blockprices'
     headers = {
+        "Authorization": authorization,
         "Content-Type": "application/json",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:66.0) Gecko/20100101 Firefox/66.0"
     }
-    response = requests.get(url=url, headers=headers).content
-    response = json.loads(response)
-    return response
+    response = requests.get(url=url, headers=headers)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        return {}
+
+
 
 
 def main():
