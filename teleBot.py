@@ -71,21 +71,38 @@ def get_sushipool_token_price(pair_address: str) -> dict:
     return message
 
 
-def main():
-    config = get_config('config.ini')
+def send_message(config: dict, remind_type: str, threshold: float):
     bot_token = config['CONF']['bot_token']
     group_chat_id = config['CONF']['group_chat_id']
-    set_gas = config['CONF']['set_gas']
-    interval_time = int(config['CONF']['interval_time'])
+    proxy = telegram.utils.request.Request(proxy_url='socks5://127.0.0.1:10808')
+    bot = telegram.Bot(bot_token, request=proxy)
+    if remind_type == 'gas':
+        authorization = config['GAS']['authorization']
+        gas = get_ethereum_gas_now(authorization)['blockPrices'][0]['estimatedPrices'][2]['price']
+        if gas < int(threshold):
+            bot.send_message(chat_id=group_chat_id, text=F"当前gas为{gas}")
 
+    if remind_type == 'price':
+        pair_address = config['PRICE']['pair_address']
+        token_message = get_sushipool_token_price(pair_address)
+        if float(token_message['price']) >= float(threshold):
+            bot.send_message(chat_id=group_chat_id,
+                             text=F"当前时间: {token_message['time']}, 关注的{token_message['symbol']} 价格为{token_message['price']}")
+
+
+def main():
+    config = get_config('config.ini')
+    interval_time = int(config['CONF']['interval_time'])
     while 1:
-        gas = gas_now()
-        fast_gas = gas['data']['fast'] // 1000000000
-        if fast_gas < int(set_gas):
-            proxy = telegram.utils.request.Request(proxy_url='socks5://127.0.0.1:10808')
-            bot = telegram.Bot(bot_token, request=proxy)
-            bot.send_message(chat_id=group_chat_id, text=F"当前以太坊的gas为 {fast_gas} gwei")
-            time.sleep(interval_time)
+        open_gas_remind = config['GAS']['open']
+        open_price_remind = config['PRICE']['open']
+        if open_gas_remind:
+            gas_threshold = config['GAS']['remind_gas']
+            send_message(config, 'gas', gas_threshold)
+        if open_price_remind:
+            price_threshold = config['PRICE']['remind_price']
+            send_message(config, 'price', price_threshold)
+        time.sleep(interval_time)
 
 
 if __name__ == '__main__':
