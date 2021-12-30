@@ -50,7 +50,23 @@ def eth_price() -> float:
         raise Exception('error')
 
 
-
+def get_sushipool_token_price() -> dict:
+    headers = {
+        'Content-Type': 'application/json',
+        'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0",
+    }
+    url = 'https://www.dextools.io/chain-ethereum/api/uniswap/poolx?pairSelected=0x34e26df719e8a5d564a7294784b23d77b67b449b'
+    resp = requests.get(url, headers=headers)
+    resp = resp.json()
+    eth_amount = resp['data']['pair']['reserve1']
+    eth_price_amount = eth_amount * eth_price()
+    tgt_amount = resp['data']['pair']['reserve0']
+    token_price_now = eth_price_amount / tgt_amount
+    message = {
+        'price': token_price_now,
+        'time': str(datetime.datetime.now())
+    }
+    return message
 
 
 def main():
