@@ -85,7 +85,7 @@ def send_message(config: dict, remind_type: str, threshold: float or list):
     if remind_type == 'gas':
         authorization = config['GAS']['authorization']
         gas = get_ethereum_gas_now(authorization)['blockPrices'][0]['estimatedPrices'][2]['price']
-        if gas < int(threshold):
+        if gas <= int(threshold):
             bot.send_message(chat_id=group_chat_id, text=F"当前gas为{gas} gwei.")
 
     if remind_type == 'price':
