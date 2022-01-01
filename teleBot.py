@@ -1,9 +1,10 @@
 import requests
-import json
 import telegram
 import time
 import configparser
 import datetime
+
+from params import proxies
 
 
 def get_config(filepath: str) -> dict:
