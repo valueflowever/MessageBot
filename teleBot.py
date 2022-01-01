@@ -40,10 +40,6 @@ def get_eth_price() -> float:
     api_doc https://www.coingecko.com/en/api/documentation
     :return: eth price
     """
-    proxies = {
-        'http': 'socks5://127.0.0.1:10808',
-        'https': 'socks5://127.0.0.1:10808'
-    }
     api_url = 'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd'
     resp = requests.get(api_url, proxies=proxies)
     if resp.status_code == 200:
