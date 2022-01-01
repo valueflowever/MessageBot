@@ -105,7 +105,7 @@ def send_message(config: dict, remind_type: str, threshold: float or list):
             threshold_price = item[1]
             if float(price_now) >= float(threshold_price):
                 bot.send_message(chat_id=group_chat_id,
-                                 text=F"关注的{item[0]}，当前价格为{price_now}$")
+                                 text=F"关注的{item[0]}，当前价格为{price_now}$，高于设定价格{threshold_price}$")
 
 
 def main():
