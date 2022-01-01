@@ -48,6 +48,15 @@ def get_eth_price() -> float:
         raise Exception('error')
 
 
+def get_coin_price(coin_ids: str) -> dict:
+    api_url = f'https://api.coingecko.com/api/v3/simple/price?ids={coin_ids}&vs_currencies=usd'
+    resp = requests.get(api_url, proxies=proxies)
+    if resp.status_code == 200:
+        return resp.json()
+    else:
+        raise Exception('error')
+
+
 def get_pool_token_price(pair_address: str) -> dict:
     headers = {
         'Content-Type': 'application/json',
@@ -68,7 +77,7 @@ def get_pool_token_price(pair_address: str) -> dict:
     return message
 
 
-def send_message(config: dict, remind_type: str, threshold: float):
+def send_message(config: dict, remind_type: str, threshold: float or list):
     bot_token = config['CONF']['bot_token']
     group_chat_id = config['CONF']['group_chat_id']
     proxy = telegram.utils.request.Request(proxy_url='socks5://127.0.0.1:10808')
@@ -84,21 +93,37 @@ def send_message(config: dict, remind_type: str, threshold: float):
         token_message = get_pool_token_price(pair_address)
         if float(token_message['price']) >= float(threshold):
             bot.send_message(chat_id=group_chat_id,
-                             text=F"当前时间: {token_message['time']}, 关注的{token_message['symbol']} 价格为{token_message['price']}")
+                             text=F"当前时间: {token_message['time']}, 关注的{token_message['symbol']} 价格为{token_message['price']}$")
+
+    if remind_type == 'coin':
+        coin_ids = config['COIN']['ids']
+        coin_ids_list = config['COIN']['ids'].split(',')
+        coin_price = get_coin_price(coin_ids)
+        coin_list = list(zip(coin_ids_list, threshold))
+        for item in coin_list:
+            price_now = coin_price[item[0]]['usd']
+            threshold_price = item[1]
+            if float(price_now) >= float(threshold_price):
+                bot.send_message(chat_id=group_chat_id,
+                                 text=F"关注的{item[0]}，当前价格为{price_now}$")
 
 
 def main():
     config = get_config('config.ini')
     interval_time = int(config['CONF']['interval_time'])
     while 1:
-        open_gas_remind = config['GAS']['open']
-        open_price_remind = config['PRICE']['open']
+        open_gas_remind = int(config['GAS']['open'])
+        open_price_remind = int(config['PRICE']['open'])
+        open_coin_remind = int(config['COIN']['open'])
         if open_gas_remind:
             gas_threshold = config['GAS']['remind_gas']
             send_message(config, 'gas', gas_threshold)
         if open_price_remind:
             price_threshold = config['PRICE']['remind_price']
             send_message(config, 'price', price_threshold)
+        if open_coin_remind:
+            remind_price_list = config['COIN']['remind_price'].split(',')
+            send_message(config, 'coin', remind_price_list)
         time.sleep(interval_time)
 
 
