@@ -77,7 +77,7 @@ def get_pool_token_price(pair_address: str) -> dict:
     return message
 
 
-def send_message(config: dict, remind_type: str, threshold: float or list):
+def send_message(config: dict, remind_type: str, threshold: any):
     bot_token = config['CONF']['bot_token']
     group_chat_id = config['CONF']['group_chat_id']
     proxy = telegram.utils.request.Request(proxy_url='socks5://127.0.0.1:10808')
@@ -91,21 +91,28 @@ def send_message(config: dict, remind_type: str, threshold: float or list):
     if remind_type == 'price':
         pair_address = config['PRICE']['pair_address']
         token_message = get_pool_token_price(pair_address)
-        if float(token_message['price']) >= float(threshold):
+        if threshold['min_price'] and float(token_message['price']) <= float(threshold['min_price']):
             bot.send_message(chat_id=group_chat_id,
-                             text=F"当前时间: {token_message['time']}, 关注的{token_message['symbol']} 价格为{token_message['price']}$")
+                             text=F"当前时间: {token_message['time']}, 关注的{token_message['symbol']}，"
+                                  F"价格为{token_message['price']}$，低于设定价格{threshold['min_price']}$")
+        if threshold['max_price'] and float(token_message['price']) >= float(threshold['max_price']):
+            bot.send_message(chat_id=group_chat_id,
+                             text=F"当前时间: {token_message['time']}, 关注的{token_message['symbol']}，"
+                                  F"价格为{token_message['price']}$，高于设定价格{threshold['max_price']}$")
 
     if remind_type == 'coin':
         coin_ids = config['COIN']['ids']
         coin_ids_list = config['COIN']['ids'].split(',')
         coin_price = get_coin_price(coin_ids)
-        coin_list = list(zip(coin_ids_list, threshold))
+        coin_list = list(zip(coin_ids_list, threshold[0], threshold[1]))
         for item in coin_list:
             price_now = coin_price[item[0]]['usd']
-            threshold_price = item[1]
-            if float(price_now) >= float(threshold_price):
+            if item[1] and float(price_now) >= float(item[1]):
                 bot.send_message(chat_id=group_chat_id,
-                                 text=F"关注的{item[0]}，当前价格为{price_now}$，高于设定价格{threshold_price}$")
+                                 text=F"关注的{item[0]}，当前价格为{price_now}$，高于设定价格{item[1]}$")
+            if item[2] and float(price_now) <= float(item[2]):
+                bot.send_message(chat_id=group_chat_id,
+                                 text=F"关注的{item[0]}，当前价格为{price_now}$，低于设定价格{item[2]}$")
 
 
 def main():
@@ -119,10 +126,10 @@ def main():
             gas_threshold = config['GAS']['remind_gas']
             send_message(config, 'gas', gas_threshold)
         if open_price_remind:
-            price_threshold = config['PRICE']['remind_price']
+            price_threshold = {'max_price': config['PRICE']['max_price'], 'min_price': config['PRICE']['min_price']}
             send_message(config, 'price', price_threshold)
         if open_coin_remind:
-            remind_price_list = config['COIN']['remind_price'].split(',')
+            remind_price_list = [config['COIN']['max_price'].split(','), config['COIN']['min_price'].split(',')]
             send_message(config, 'coin', remind_price_list)
         time.sleep(interval_time)
 
